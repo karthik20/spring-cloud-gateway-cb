@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      mvc:
+        routes:
+        - id: customer
+          uri: http://localhost:8080
+          predicates:
+          - Path=/customer/**
+          filters:
+            - AddRequestHeader=X-Routed, yes
+            - RewritePath=/gateway/customer/, /customer
+            - name: CircuitBreaker
+              args:
+                name: customerCircuitBreaker_1
+
+    circuitbreaker:
+      resilience4j:
+        enabled: true
+#  mvc:
+#    servlet:
+#      path: /gateway
+
+
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      customerCircuitBreaker:
+        failure-rate-threshold: 20
+        minimum-number-of-calls: 2
+
+server:
+  port: 8088
+#  servlet:
+#    context-path: /gateway
+
+#logging:
+#  level:
+#    org.springframework: DEBUG
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
+
